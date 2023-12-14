@@ -1,0 +1,100 @@
+getServiceLocation addresses
+
+select serviceID, street, unitno, city, state, zipcode
+FROM CustomerAddress CA JOIN ServiceLocation SL ON CA.addressID = SL.addressID JOIN Address A on CA.addressID = A.addressID Where
+CA.custID = custID
+custID is the input
+
+Remove ServiceLocation 
+same query but the ID returned will help delete the corresponding row. 
+
+
+device registeration
+
+insert deviceID and serviceID into the table from the selected componenets
+
+
+graphs
+
+
+
+PT.start_time = (select max(start_time) from price_map where zipcode = pd.zipcode_id and start_time <= pd.timestamp)
+
+select max(time) from priceTable where zipcode = A.zipcode and time < DE.timestamp
+
+
+
+shows the total price per location (month) 
+
+QUERY:
+    select SL.serviceID, SUM(DE.value * PT.price) AS total_energy_cost
+    from DeviceEvents DE join DeviceRegister DR on DE.deviceRegID = DR.deviceRegID
+        join ServiceLocation SL on SL.serviceID = DR.serviceID
+        join CustomerAddress CA on CA.addressID = SL.addressID
+        join Address A on A.addressID = CA.addressID
+        join PriceTable PT on PT.zipcode = A.zipcode and PT.time = (select max(time) from PriceTable where zipcode = A.zipcode and time < DE.timestamp)
+    where EXTRACT(MONTH FROM DE.timestamp) = monthInput
+    AND EXTRACT(YEAR FROM DE.timestamp) = yearInput
+    AND DE.eventLabel = 'Energy Consumed'
+    and custID = inputcustID
+    group by SL.serviceID
+
+
+shows total energy consumed per location (month)
+
+select SL.serviceID, SUM(DE.value) AS total_energy
+    from DeviceEvents DE join DeviceRegister DR on DE.deviceRegID =  DR.deviceRegID
+        join ServiceLocation SL on SL.serviceID = DR.serviceID
+        join CustomerAddress CA on CA.addressID = SL.addressID
+    where EXTRACT(MONTH FROM DE.timestamp) = monthInput
+    AND EXTRACT(YEAR FROM DE.timestamp) = yearInput
+    AND DE.eventLabel = 'Energy Consumed'
+    and custID = inputcustID
+    group by SL.serviceID
+
+
+
+
+shows energy used per device (time)
+SELECT
+    EXTRACT(HOUR FROM DE.timestamp) as time ,
+    SUM(DE.value) AS total_energy
+FROM
+    DeviceEvents DE join DeviceRegister DR on DE.deviceRegID =  DR.deviceRegID
+        join ServiceLocation SL on SL.serviceID = DR.serviceID
+        join CustomerAddress CA on CA.addressID = SL.addressID
+WHERE
+    EXTRACT(DAY from DE.timestamp) = dateInput 
+    AND EXTRACT(MONTH FROM DE.timestamp) = monthInput
+    AND EXTRACT(YEAR FROM DE.timestamp) = yearInput
+    and CA.custID = inputcustID
+GROUP BY
+    DR.deviceRegID,
+    EXTRACT(HOUR FROM DE.timestamp);
+
+
+
+
+shows total price per device (time)
+
+select 
+    EXTRACT(HOUR FROM DE.timestamp) as time ,
+    SUM(DE.value*PT.price) AS total_price
+FROM 
+    DeviceEvents DE join DeviceRegister DR on DE.deviceRegID = DR.deviceRegID
+        join ServiceLocation SL on SL.serviceID = DR.serviceID
+        join CustomerAddress CA on CA.addressID = SL.addressID
+        join Address A on A.addressID = CA.addressID
+        join PriceTable PT on PT.zipcode = A.zipcode and PT.time = (select max(time) from PriceTable where zipcode = A.zipcode and time < DE.timestamp)
+    where
+        EXTRACT(MONTH FROM DE.timestamp) = monthInput
+        AND EXTRACT(YEAR FROM DE.timestamp) = yearInput
+        AND DE.eventLabel = 'Energy Consumed'
+        AND custID = inputcustID
+    group by
+        DR.deviceRegID,
+        EXTRACT(HOUR FROM DE.timestamp)
+        
+
+
+spring boot
